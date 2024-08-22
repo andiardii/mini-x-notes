@@ -1,0 +1,26 @@
+version: "3"
+services:
+  container-app:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    volumes:
+      - ./src:/app/src
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: db
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
