@@ -14,6 +14,18 @@ func main() {
 
     r := gin.Default()
 
+	// Middleware CORS
+    r.Use(func(c *gin.Context) {
+        c.Header("Access-Control-Allow-Origin", "*")
+        c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+        c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(http.StatusNoContent)
+            return
+        }
+        c.Next()
+    })
+
 	r.GET("/", func(c *gin.Context) {
         c.String(http.StatusOK, "Hello, World!")
     })

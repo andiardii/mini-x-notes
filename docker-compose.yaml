@@ -3,13 +3,27 @@ services:
   container-app:
     build:
       dockerfile: Dockerfile
-      context: ./
+      context: ./src
     volumes:
       - ./src:/app/src
     ports:
       - 8080:8080
     depends_on:
       - mysql
+
+  nextjs-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - container-app
 
   mysql:
     image: mysql:8.0

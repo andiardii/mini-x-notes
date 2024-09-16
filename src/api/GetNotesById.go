@@ -5,6 +5,7 @@ import (
     "net/http"
     "notes/core"
     "strconv"
+    "database/sql"
 )
 
 func GetNotesById(c *gin.Context) {
@@ -17,9 +18,10 @@ func GetNotesById(c *gin.Context) {
     }
 
     rows, err := core.DB.Query(`
-        SELECT n.id, n.user_id, n.note, GROUP_CONCAT(t.tag ORDER BY t.tag SEPARATOR ',') AS tags
+        SELECT n.id, n.user_id, n.note, u.username, GROUP_CONCAT(t.tag ORDER BY t.tag SEPARATOR ',') AS tags, n.time
         FROM notes n
         LEFT JOIN tags t ON t.notes_id = n.id
+        LEFT JOIN users u ON u.id = n.user_id
         WHERE n.id = ?
         GROUP BY n.id, n.note
     `, id)
@@ -30,25 +32,32 @@ func GetNotesById(c *gin.Context) {
     defer rows.Close()
 
     var items []map[string]interface{}
+
     for rows.Next() {
 		var id int
         var user_id int
         var note string
-        var tags string
+        var username string
+        var tags sql.NullString
+        var timeStr string
 
-        if err := rows.Scan(&id, &user_id, &note, &tags); err != nil {
+        if err := rows.Scan(&id, &user_id, &note, &username, &tags, &timeStr); err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
             return
         }
+
+        timeAgo := core.TimeConvert(timeStr)
 
         item := map[string]interface{}{
 			"id": id,
             "user_id": user_id,
             "notes": note,
-            "tags": tags,
+            "username": username,
+            "tags": tags.String,
+            "time": timeAgo,
         }
         items = append(items, item)
     }
 
-    c.JSON(http.StatusOK, items)
+    c.JSON(http.StatusOK, items[0])
 }
